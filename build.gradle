@@ -1,0 +1,149 @@
+plugins {
+    id 'org.jetbrains.kotlin.jvm' version '1.4.0'
+    id 'com.google.protobuf' version '0.8.10'
+    // Generate IntelliJ IDEA's .idea & .iml project files.
+    // protobuf-gradle-plugin automatically registers *.proto and the gen output files
+    // to IntelliJ as sources.
+    // For best results, install the Protobuf and Kotlin plugins for IntelliJ.
+    id 'idea'
+}
+
+group 'io.codeenclave.fin.rest'
+version '1.0-SNAPSHOT'
+
+ext {
+    grpcVersion = '1.29.0' // CURRENT_GRPC_VERSION
+    grpcKotlinVersion = "0.1.5" // CURRENT_GRPC_KOTLIN_VERSION
+    protobufVersion = '3.11.0'
+    kotlinVersion = '1.4.10'
+    coroutinesVersion = '1.3.9'
+    googleauthVersion = '0.20.0'
+    cucumberVersion = '6.7.0'
+    http4kVersion = '3.261.0'
+    jupiterVersion = '5.5.2'
+    jacksonVersion = "2.10.0"
+}
+
+
+
+repositories {
+    google()
+    jcenter()
+    mavenCentral()
+    mavenLocal()
+}
+
+dependencies {
+    // Kotlin and Java
+    implementation("org.jetbrains.kotlinx:kotlinx-coroutines-core:${coroutinesVersion}")
+    implementation("javax.annotation:javax.annotation-api:1.2")
+
+    // Grpc and Protobuf
+    implementation("com.google.protobuf:protobuf-java:${protobufVersion}")
+    implementation("com.google.protobuf:protobuf-java-util:${protobufVersion}")
+    implementation("io.grpc:grpc-kotlin-stub:${grpcKotlinVersion}")
+    implementation("io.grpc:grpc-protobuf:${grpcVersion}")
+    implementation("io.grpc:grpc-stub:${grpcVersion}")
+    implementation("io.grpc:grpc-netty-shaded:${grpcVersion}")
+    compile("io.grpc:grpc-testing:${grpcVersion}")
+    testImplementation 'com.google.protobuf:protobuf-gradle-plugin:0.8.13'
+
+
+    implementation("org.jetbrains.kotlin:kotlin-stdlib-jdk8:${kotlinVersion}")
+    implementation("org.jetbrains.kotlin:kotlin-stdlib:${kotlinVersion}")
+
+    // uuid library needed due to the fact kotlin does not have uuid yet
+    implementation "com.benasher44:uuid:0.2.2"
+
+    // http4k
+    implementation "org.http4k:http4k-core:${http4kVersion}"
+    implementation "org.http4k:http4k-server-jetty:${http4kVersion}"
+    implementation("org.http4k:http4k-format-jackson:$http4kVersion")
+    implementation "org.http4k:http4k-client-apache:${http4kVersion}"
+    implementation "org.http4k:http4k-client-okhttp:${http4kVersion}"
+    implementation "org.http4k:http4k-testing-hamkrest:${http4kVersion}"
+
+    implementation("com.fasterxml.jackson.core:jackson-core:$jacksonVersion")
+    implementation("com.fasterxml.jackson.dataformat:jackson-dataformat-yaml:$jacksonVersion")
+    implementation("com.fasterxml.jackson.datatype:jackson-datatype-joda:$jacksonVersion")
+
+
+    // Testing
+    // testImplementation("io.cucumber:cucumber-java:${cucumberVersion}")
+    testImplementation("io.cucumber:cucumber-java8:${cucumberVersion}")
+    // testImplementation("io.cucumber:cucumber-junit:${cucumberVersion}")
+    // testImplementation("io.cucumber:cucumber-jvm:${cucumberVersion}")
+    // testImplementation("io.cucumber:cucumber-core:${cucumberVersion}")
+
+    testImplementation "junit:junit:4.12"
+    testImplementation "com.google.guava:guava:28.2-jre"
+    testImplementation "com.google.jimfs:jimfs:1.1"
+    testImplementation "com.nhaarman.mockitokotlin2:mockito-kotlin:2.2.0"
+    testImplementation "org.mockito:mockito-core:2.28.2"
+
+    testImplementation(
+            'org.assertj:assertj-core:3.12.2',
+            "org.junit.jupiter:junit-jupiter-api:${jupiterVersion}"
+    )
+    testRuntime("org.junit.jupiter:junit-jupiter-engine:${jupiterVersion}")
+}
+
+test {
+    useJUnitPlatform()
+}
+
+protobuf {
+    protoc {
+        artifact = "com.google.protobuf:protoc:$protobufVersion"
+    }
+    plugins {
+        grpc {
+            artifact = "io.grpc:protoc-gen-grpc-java:$grpcVersion"
+        }
+        grpckt {
+            artifact = "io.grpc:protoc-gen-grpc-kotlin:$grpcKotlinVersion"
+        }
+    }
+    generateProtoTasks {
+        ofSourceSet("main").forEach {
+            it.plugins {
+                grpc {}
+                grpckt {}
+            }
+        }
+    }
+}
+
+sourceSets {
+    main {
+        proto {
+            srcDir 'src/main/resources/proto'
+        }
+        java {
+            srcDirs = ['src/main/java', 'build/generated/source/proto/main', 'build/generated/source/proto/main/grpc']
+        }
+    }
+    test {
+        proto {
+            // In addition to the default 'src/test/proto'
+            // srcDirs=['src/test/protocolbuffers']
+        }
+    }
+}
+
+configurations {
+    cucumberRuntime {
+        extendsFrom testImplementation
+    }
+}
+
+task cucumber() {
+    dependsOn assemble, compileTestJava
+    doLast {
+        javaexec {
+            main = "io.cucumber.core.cli.Main"
+            classpath = configurations.cucumberRuntime + sourceSets.main.output + sourceSets.test.output
+            args = ['--plugin', 'pretty', '--glue', 'io.codeenclave.fin.rest.counterparty ', 'src/test/resources']
+        }
+    }
+}

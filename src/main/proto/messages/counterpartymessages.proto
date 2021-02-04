@@ -1,0 +1,34 @@
+// message is defined using the proto3 syntax
+syntax = "proto3";
+package io.codeenclave.fin.protobuf.messages;
+
+message CounterpartyIdentifier {
+  // client unique identifier represented by a guid
+  string cid = 1;
+}
+
+message ConterpartyAddress {
+  string street = 1;
+  string house_number = 2;
+  string city = 3;
+  string county = 4;
+  string country = 5;
+}
+
+// Message represents data about a person registered in the system
+message Counterparty {
+  // client unique identifier
+  CounterpartyIdentifier cid = 1;
+  // first name of person as per the signup form
+  string  first_name = 2;
+  string  second_name = 3;
+  // age of person when they signed up to the system
+  int32   age = 4;
+  // bytes of the photo in .jpg format
+  bytes   photo_id = 5;
+  // is true if the person verified their email address
+  bool    is_profile_verified = 6;
+  // list of phone numbers
+  repeated string phone_number = 7;
+  repeated ConterpartyAddress address = 8;
+}
