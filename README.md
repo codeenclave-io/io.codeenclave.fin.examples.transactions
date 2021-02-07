@@ -17,11 +17,14 @@ kubectl get pods
 
 you should get something similar to this:
 
-<samp>
+<pre>
 NAME                                          READY   STATUS    RESTARTS   AGE
 association-transaction-node-765886c7-c48cd   1/1     Running   0          19m
 association-transaction-node-765886c7-jvvt4   1/1     Running   0          19m
 association-transaction-node-765886c7-ppqx4   1/1     Running   0          19m
 kafka-broker0-56545d949b-hh54l                1/1     Running   0          18h
 zookeeper-deployment-1-6d9649f6cf-v7kph       1/1     Running   0          18h
-</samp>
+</pre>
+
+Once everything us up and running it should be possible to see the swagger api by going visting
+<a href=http://localhost:32000/index.html#/>http://localhost:32000/index.html#/</a>
