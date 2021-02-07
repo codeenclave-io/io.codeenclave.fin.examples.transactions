@@ -29,7 +29,7 @@ spec:
     spec:
       containers:
         - name: association-transaction-pod
-          image: codeenclave/io.codeenclave.fin.service.transactions:0.0.2-SNAPSHOT
+          image: codeenclave/io.codeenclave.fin.service.transactions:latest
           ports:
             - containerPort: 8080
           imagePullPolicy: Always
@@ -38,7 +38,7 @@ spec:
               mountPath: /tmp/rocksdb-transactions
           env:
             - name: KAFKA_SERVER_URL
-              value: "kafkalocal.default.svc.cluster.local:9092"
+              value: "kafka-service.default.svc.cluster.local:9092"
             - name: KAFKA_TRANSACTION_TOPIC
               value: "crux-docs"
             - name: ROCKS_DB_DIRECTORY
