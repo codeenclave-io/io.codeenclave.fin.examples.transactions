@@ -1,5 +1,6 @@
 package io.codeenclave.fin.examples.service.transactions
 
+import io.codeenclave.fin.examples.service.transactions.generators.generateTrasnaction
 import io.codeenclave.fin.examples.service.transactions.util.CatchHttpExceptions
 import io.codeenclave.fin.examples.service.transactions.util.createErrorResponse
 import org.http4k.core.*
@@ -25,7 +26,8 @@ class Router(
             // .then(ServerFilters.InitialiseRequestContext(contexts))
             .then(
                 routes(
-                    "/ping" bind Method.GET to { _: Request -> Response(Status.OK).body("Ping") }
+                    "/ping" bind Method.GET to { _: Request -> Response(Status.OK).body("Ping")},
+                    "/transaction" bind Method.GET to {_ : Request -> Response(Status.OK).body(generateTrasnaction().toString())}
                 )
             )
 }

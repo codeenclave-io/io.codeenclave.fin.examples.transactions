@@ -26,5 +26,5 @@ kafka-broker0-56545d949b-hh54l                1/1     Running   0          18h
 zookeeper-deployment-1-6d9649f6cf-v7kph       1/1     Running   0          18h
 </pre>
 
-Once everything us up and running it should be possible to see the swagger api by going visting
+Once everything us up and running it should be possible to see the swagger api by visting
 <a href=http://localhost:32000/index.html#/>http://localhost:32000/index.html#/</a>
