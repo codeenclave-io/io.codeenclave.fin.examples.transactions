@@ -9,8 +9,8 @@ plugins {
     id 'idea'
 }
 
-group 'io.codeenclave.fin.rest'
-version '1.0-SNAPSHOT'
+group 'io.codeenclave.fin.examples.service'
+version '0.0.1'
 
 ext {
     grpcVersion = '1.29.0' // CURRENT_GRPC_VERSION
