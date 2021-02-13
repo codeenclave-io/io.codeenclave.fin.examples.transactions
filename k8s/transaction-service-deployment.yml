@@ -37,12 +37,19 @@ spec:
             - name: task-pv-storage
               mountPath: /tmp/rocksdb-transactions
           env:
+            - name: NODE_NAME
+              valueFrom:
+                fieldRef:
+                  fieldPath: metadata.name
             - name: KAFKA_SERVER_URL
               value: "kafka-service.default.svc.cluster.local:9092"
             - name: KAFKA_TRANSACTION_TOPIC
               value: "crux-docs"
-            - name: ROCKS_DB_DIRECTORY
-              value: "/tmp/rocksdb/"
+            - name: ASSOCIATION_ROCKS_DB_DIRECTORY
+              value: "/tmp/rocksdb/$(NODE_NAME)/association"
+            - name: TRANSACTION_ROCKS_DB_DIRECTORY
+              value: "/tmp/rocksdb/$(NODE_NAME)/transaction"
+
       volumes:
         - name: task-pv-storage
           hostPath:
