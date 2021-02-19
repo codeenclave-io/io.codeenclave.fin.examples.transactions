@@ -57,6 +57,10 @@ dependencies {
     // uuid library needed due to the fact kotlin does not have uuid yet
     implementation "com.benasher44:uuid:0.2.2"
 
+    // ktor http client
+    implementation("io.ktor:ktor-client-core:1.5.1")
+    implementation("io.ktor:ktor-client-cio:1.5.1")
+
     // http4k
     implementation "org.http4k:http4k-core:${http4kVersion}"
     implementation "org.http4k:http4k-server-jetty:${http4kVersion}"

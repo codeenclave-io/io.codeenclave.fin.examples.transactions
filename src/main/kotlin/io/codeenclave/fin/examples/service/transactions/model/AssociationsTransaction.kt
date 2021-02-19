@@ -4,15 +4,19 @@ import io.codeenclave.fin.examples.service.transactions.generators.generateTrasn
 import io.codeenclave.fin.examples.service.transactions.model.associations.Association
 import io.codeenclave.fin.examples.service.transactions.model.associations.generateCounterpartyAssociation
 import io.codeenclave.fin.examples.service.transactions.model.associations.generateTradingbookAssociation
-import io.codeenclave.fin.examples.service.transactions.model.transactions.type.Transaction
+import io.codeenclave.fin.examples.service.transactions.model.transactions.type.*
+import io.codeenclave.fin.examples.service.transactions.model.transactions.type.module
+import io.codeenclave.fin.examples.service.transactions.serialization.AssociationListSerializer
 import io.codeenclave.fin.examples.service.transactions.serialization.TransactionSerializer
 import kotlinx.serialization.Serializable
+import kotlinx.serialization.json.Json
+import kotlinx.serialization.modules.SerializersModule
+import kotlinx.serialization.modules.polymorphic
 import okhttp3.internal.immutableListOf
 
 @Serializable
 data class AssociationsTransaction(
     val associations: List<Association>,
-    @Serializable(with = TransactionSerializer::class)
     val transaction: Transaction?
 )
 
@@ -25,3 +29,9 @@ fun generateAssociationTransaction() : AssociationsTransaction {
         transaction = generateTrasnaction()
     )
 }
+
+val module = SerializersModule {
+    polymorphic(AssociationsTransaction::class)
+}
+
+val transactionAssociationJsonFormatter = Json { serializersModule = module }

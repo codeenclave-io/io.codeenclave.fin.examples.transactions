@@ -22,6 +22,4 @@ object TransactionSerializer : KSerializer<Transaction> {
     override fun serialize(encoder: Encoder, value: Transaction) {
         encoder.encodeString(transactionJsonFormatter.encodeToString(value))
     }
-
 }
-

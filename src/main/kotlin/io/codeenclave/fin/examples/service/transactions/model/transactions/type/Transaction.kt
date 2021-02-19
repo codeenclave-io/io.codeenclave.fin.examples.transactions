@@ -1,6 +1,7 @@
 package io.codeenclave.fin.examples.service.transactions.model.transactions.type
 
 import io.codeenclave.fin.examples.service.transactions.model.transactions.TransactionType
+import io.codeenclave.fin.examples.service.transactions.serialization.TransactionTypeSerializer
 import io.codeenclave.fin.examples.service.transactions.serialization.UUIDSerializer
 import kotlinx.serialization.DeserializationStrategy
 import kotlinx.serialization.Polymorphic
@@ -18,9 +19,10 @@ import java.util.*
 @Polymorphic
 @Serializable
 abstract class Transaction (
+    @Serializable(with = TransactionTypeSerializer::class)
     var transactionType : TransactionType,
     @Serializable(with = UUIDSerializer::class)
-    var tcn : UUID = UUID.randomUUID()
+    var id : UUID = UUID.randomUUID()
 )
 
 

@@ -1,6 +1,9 @@
 package io.codeenclave.fin.examples.service.transactions
 
 import io.codeenclave.fin.examples.service.transactions.generators.generateTrasnaction
+import io.codeenclave.fin.examples.service.transactions.handlers.generateRandomTransactionAssociations
+import io.codeenclave.fin.examples.service.transactions.handlers.generateTransactionAssociationHandler
+import io.codeenclave.fin.examples.service.transactions.handlers.generateTransactionHandler
 import io.codeenclave.fin.examples.service.transactions.model.generateAssociationTransaction
 import io.codeenclave.fin.examples.service.transactions.model.transactions.type.transactionJsonFormatter
 import io.codeenclave.fin.examples.service.transactions.util.CatchHttpExceptions
@@ -32,8 +35,9 @@ class Router(
             .then(
                 routes(
                     "/ping" bind Method.GET to { _: Request -> Response(Status.OK).body("Ping")},
-                    "/transaction" bind Method.GET to {_ : Request -> Response(Status.OK).body(transactionJsonFormatter.encodeToString(generateTrasnaction()))},
-                    "/association" bind Method.GET to {_ : Request -> Response(Status.OK).body(Json.encodeToString(generateAssociationTransaction()))}
+                    "/transaction" bind Method.GET to generateTransactionHandler,
+                    "/association" bind Method.GET to generateTransactionAssociationHandler,
+                    "/generate" bind Method.GET to generateRandomTransactionAssociations
                 )
             )
 }
