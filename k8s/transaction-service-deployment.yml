@@ -21,7 +21,7 @@ spec:
   selector:
     matchLabels:
       name: association-transaction-node
-  replicas: 3  # tells deployment to run 2 pods matching the template
+  replicas: 2  # tells deployment to run 2 pods matching the template
   template:
     metadata:
       labels:
@@ -35,21 +35,34 @@ spec:
           imagePullPolicy: Always
           volumeMounts:
             - name: task-pv-storage
-              mountPath: /tmp/rocksdb-transactions
+              mountPath: /tmp/rocksdb
           env:
             - name: NODE_NAME
               valueFrom:
                 fieldRef:
                   fieldPath: metadata.name
             - name: KAFKA_SERVER_URL
-              value: "kafka-service.default.svc.cluster.local:9092"
-            - name: KAFKA_TRANSACTION_TOPIC
-              value: "crux-docs"
-            - name: ASSOCIATION_ROCKS_DB_DIRECTORY
+              value: "my-confluent-cp-kafka.default.svc.cluster.local:9092"
+            - name: ASSOCIATIONSTORE_KAFKA_DOCUMENTSTORAGE_TOPIC
+              value: "association-docs"
+            - name: ASSOCIATIONSTORE_KAFKA_DOCMENTTSTORAGE_POLL_DURATION
+              value: "1"
+            - name: ASSOCIATIONSTORE_KAFKA_TRANSACTIONLOG_TOPIC
+              value: "association-tx-log"
+            - name: ASSOCIATIONSTORE_KAFKA_TRANSACTIONLOG_POLL_DURATION
+              value: "1"
+            - name: ASSOCIATIONSTORE_ROCKS_DB_DIRECTORY
               value: "/tmp/rocksdb/$(NODE_NAME)/association"
+            - name: TRANSACTIONSTORE_KAFKA_DOCUMENTSTORAGE_TOPIC
+              value: "transaction-docs"
+            - name: TRANSACTIONSTORE_KAFKA_DOCMENTTSTORAGE_POLL_DURATION
+              value: "1"
+            - name: TRANSACTIONSTORE_KAFKA_TRANSACTIONLOG_TOPIC
+              value: "transaction-tx-log"
+            - name: TRANSACTIONSTORE_KAFKA_TRANSACTIONLOG_POLL_DURATION
+              value: "1"
             - name: TRANSACTION_ROCKS_DB_DIRECTORY
               value: "/tmp/rocksdb/$(NODE_NAME)/transaction"
-
       volumes:
         - name: task-pv-storage
           hostPath:

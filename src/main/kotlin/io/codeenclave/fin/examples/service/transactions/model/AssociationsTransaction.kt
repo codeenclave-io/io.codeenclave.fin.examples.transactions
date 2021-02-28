@@ -34,4 +34,4 @@ val module = SerializersModule {
     polymorphic(AssociationsTransaction::class)
 }
 
-val transactionAssociationJsonFormatter = Json { serializersModule = module }
+val transactionAssociationsJsonFormatter = Json { serializersModule = module }

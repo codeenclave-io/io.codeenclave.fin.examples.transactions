@@ -1,53 +1,73 @@
 package io.codeenclave.fin.examples.service.transactions.handlers
 
-import io.codeenclave.fin.examples.service.transactions.model.AssociationsTransaction
 import io.codeenclave.fin.examples.service.transactions.model.generateAssociationTransaction
-import io.codeenclave.fin.examples.service.transactions.model.transactionAssociationJsonFormatter
+import io.codeenclave.fin.examples.service.transactions.model.transactionAssociationsJsonFormatter
 import io.ktor.client.*
 import io.ktor.client.engine.cio.*
-import io.ktor.client.features.*
 import io.ktor.client.request.*
 import io.ktor.client.statement.*
 import io.ktor.http.*
-import kotlinx.coroutines.launch
-import kotlinx.coroutines.runBlocking
+import kotlinx.coroutines.*
 import kotlinx.serialization.encodeToString
-import kotlinx.serialization.json.Json
+import okhttp3.internal.wait
 import org.http4k.core.HttpHandler
 import org.http4k.core.Request
 import org.http4k.core.Response
 import org.http4k.core.Status
+import java.util.*
+import kotlin.collections.HashMap
+import kotlin.concurrent.thread
 
-val generateRandomTransactionAssociations: HttpHandler = { req: Request ->
-    val divisor : Int = 10
-    val count: Int = req.query("count")?.toInt() ?: 500000
-    val rem: Int = count%divisor
-    val blockCount = count/divisor + (if (rem > 0)  1 else 0)
-    for(i in 1..blockCount) {
-        runBlocking {
-            var iterations = if (i == blockCount) rem else divisor
-            val job = launch {
-                println("${Thread.currentThread()} has run. $i")
-                val client = HttpClient(CIO)
-                for(j in 1..iterations) {
-                    val response: HttpResponse = client.get("http://localhost:32000/about")
-                    println(response.status)
-                    println(response.readText())
+object RandomTransactionAssociation {
+    val threads = HashMap<UUID, Thread>()
+    val counters = HashMap<UUID, IntArray>()
 
-                    val at = generateAssociationTransaction()
-                    val gat = transactionAssociationJsonFormatter.encodeToString(at)
-                    println(gat)
-                    val postResponnse = client.put<HttpResponse>{
-                        contentType(ContentType.Application.Json)
-                        url("http://localhost:32000/association-transaction")
-                        body = gat
+    val generateRandomTransactionAssociations: HttpHandler = { req: Request ->
+        val parallelExecutions : Int = 20
+        val count: Int = req.query("count")?.toInt() ?: 500000
+        val rem: Int = count%parallelExecutions
+        val fullIterationExecution = count/parallelExecutions
+        val jobId = UUID.randomUUID();
+
+        counters.put(jobId, IntArray(parallelExecutions))
+        threads.put(jobId, thread {
+            for (i in 0..parallelExecutions) {
+                val deferred = GlobalScope.async {
+                    var iterations = if (i == parallelExecutions) rem else fullIterationExecution
+                    val job: Job = launch {
+                        println(">>> $i started executing $iterations")
+                        for (j in 1..iterations) {
+                            val client = HttpClient(CIO)
+                            try {
+                                val postResponse = client.put<HttpResponse> {
+                                    contentType(ContentType.Application.Json)
+                                    url("http://localhost:32000/association-transaction")
+                                    body = transactionAssociationsJsonFormatter.encodeToString(generateAssociationTransaction())
+                                }
+                                // println("Received response ($i,$j): ${postResponse.readText()}")
+                                counters[jobId]?.set(i, j)
+                            }
+                            catch (cause: Throwable) {
+                                println("Http Post Error ($i, $j): $cause")
+                            }
+                            // if (j % 20 == 0) counters[jobId]?.set(i, j)
+                            client.close()
+                        }
                     }
-                    println(postResponnse.readText())
                 }
-                client.close()
             }
-        }
+        })
+        Response(Status.OK).body(jobId.toString())
     }
-    Response(Status.OK).body(count.toString())
+
+    val getStatus: HttpHandler = {request: Request ->
+        val jobId: UUID? = UUID.fromString(request.query("jobId"))
+        if (threads.containsKey(jobId))
+            Response(Status.OK).body(counters[jobId].contentToString())
+        else
+            Response(Status.OK).body("No such jobId $jobId")
+    }
 }
+
+
 

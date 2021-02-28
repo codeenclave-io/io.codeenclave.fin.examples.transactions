@@ -2,6 +2,7 @@ plugins {
     id 'org.jetbrains.kotlin.jvm' version '1.4.30'
     id 'org.jetbrains.kotlin.plugin.serialization' version '1.4.30'
     id 'com.google.protobuf' version '0.8.10'
+    id 'com.github.johnrengelman.shadow'  version "5.2.0"
     // Generate IntelliJ IDEA's .idea & .iml project files.
     // protobuf-gradle-plugin automatically registers *.proto and the gen output files
     // to IntelliJ as sources.
@@ -9,8 +10,18 @@ plugins {
     id 'idea'
 }
 
+apply plugin: "com.github.johnrengelman.shadow"
+apply plugin: 'application'
+
 group 'io.codeenclave.fin.examples.service'
 version '0.0.1'
+mainClassName = 'io.codeenclave.fin.examples.service.transactions.MainKt'
+
+shadowJar {
+    baseName = 'my-application'
+    classifier = null
+    version = null
+}
 
 ext {
     grpcVersion = '1.29.0' // CURRENT_GRPC_VERSION
@@ -24,8 +35,6 @@ ext {
     jupiterVersion = '5.5.2'
     jacksonVersion = "2.10.0"
 }
-
-
 
 repositories {
     google()
@@ -53,6 +62,10 @@ dependencies {
 
     implementation("org.jetbrains.kotlin:kotlin-stdlib-jdk8:${kotlinVersion}")
     implementation("org.jetbrains.kotlin:kotlin-stdlib:${kotlinVersion}")
+    runtimeOnly("org.jetbrains.kotlin:kotlin-reflect:${kotlinVersion}")
+    // https://mvnrepository.com/artifact/org.jetbrains.kotlinx/kotlinx-coroutines-core
+    implementation group: 'org.jetbrains.kotlinx', name: 'kotlinx-coroutines-core', version: '1.4.2'
+
 
     // uuid library needed due to the fact kotlin does not have uuid yet
     implementation "com.benasher44:uuid:0.2.2"
@@ -64,7 +77,7 @@ dependencies {
     // http4k
     implementation "org.http4k:http4k-core:${http4kVersion}"
     implementation "org.http4k:http4k-server-jetty:${http4kVersion}"
-    implementation("org.http4k:http4k-format-jackson:$http4kVersion")
+    implementation "org.http4k:http4k-format-jackson:$http4kVersion"
     implementation "org.http4k:http4k-client-apache:${http4kVersion}"
     implementation "org.http4k:http4k-client-okhttp:${http4kVersion}"
     implementation "org.http4k:http4k-testing-hamkrest:${http4kVersion}"
@@ -72,6 +85,13 @@ dependencies {
     implementation("com.fasterxml.jackson.core:jackson-core:$jacksonVersion")
     implementation("com.fasterxml.jackson.dataformat:jackson-dataformat-yaml:$jacksonVersion")
     implementation("com.fasterxml.jackson.datatype:jackson-datatype-joda:$jacksonVersion")
+
+
+    // https://mvnrepository.com/artifact/org.apache.kafka/kafka-clients
+    implementation group: 'org.apache.kafka', name: 'kafka-clients', version: '2.7.0'
+    // https://mvnrepository.com/artifact/io.streamthoughts/kafka-clients-kotlin
+    implementation group: 'io.streamthoughts', name: 'kafka-clients-kotlin', version: '0.2.0'
+
 
 
     // Testing
@@ -126,7 +146,7 @@ sourceSets {
             srcDir 'src/main/resources/proto'
         }
         java {
-            srcDirs = ['src/main/java', 'build/generated/source/proto/main', 'build/generated/source/proto/main/grpc']
+            srcDirs = ['src/main/kotlin', 'build/generated/source/proto/main', 'build/generated/source/proto/main/grpc']
         }
     }
     test {
@@ -149,7 +169,12 @@ task cucumber() {
         javaexec {
             main = "io.cucumber.core.cli.Main"
             classpath = configurations.cucumberRuntime + sourceSets.main.output + sourceSets.test.output
-            args = ['--plugin', 'pretty', '--glue', 'io.codeenclave.fin.rest.counterparty ', 'src/test/resources']
+            args = ['--plugin', 'pretty', '--glue', 'io.codeenclave.fin.examples.service.transactions ', 'src/test/resources']
         }
     }
+}
+
+jar {
+    manifest { attributes "Main-Class": "io.codeenclave.fin.examples.service.transactions.MainKt"}
+    from { configurations.compile.collect { it.isDirectory() ? it : zipTree(it) } }
 }

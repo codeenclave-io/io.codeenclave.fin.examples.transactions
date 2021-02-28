@@ -1,15 +1,8 @@
 package io.codeenclave.fin.examples.service.transactions
 
-import io.codeenclave.fin.examples.service.transactions.generators.generateTrasnaction
-import io.codeenclave.fin.examples.service.transactions.handlers.generateRandomTransactionAssociations
-import io.codeenclave.fin.examples.service.transactions.handlers.generateTransactionAssociationHandler
-import io.codeenclave.fin.examples.service.transactions.handlers.generateTransactionHandler
-import io.codeenclave.fin.examples.service.transactions.model.generateAssociationTransaction
-import io.codeenclave.fin.examples.service.transactions.model.transactions.type.transactionJsonFormatter
+import io.codeenclave.fin.examples.service.transactions.handlers.*
 import io.codeenclave.fin.examples.service.transactions.util.CatchHttpExceptions
 import io.codeenclave.fin.examples.service.transactions.util.createErrorResponse
-import kotlinx.serialization.encodeToString
-import kotlinx.serialization.json.Json
 import org.http4k.core.*
 import org.http4k.filter.CorsPolicy
 import org.http4k.filter.ServerFilters
@@ -37,7 +30,9 @@ class Router(
                     "/ping" bind Method.GET to { _: Request -> Response(Status.OK).body("Ping")},
                     "/transaction" bind Method.GET to generateTransactionHandler,
                     "/association" bind Method.GET to generateTransactionAssociationHandler,
-                    "/generate" bind Method.GET to generateRandomTransactionAssociations
+                    "/generate" bind Method.GET to RandomTransactionAssociation.generateRandomTransactionAssociations,
+                        "/generate/status" bind Method.GET to RandomTransactionAssociation.getStatus,
+                    "/association/counterparty" bind Method.GET to getTransactionsByAssociation
                 )
             )
 }
