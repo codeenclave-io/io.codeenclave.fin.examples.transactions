@@ -3,10 +3,12 @@ This project consists of a set of examples and tests for the bi-temporal transac
 store io.codeenclave.fin.service.transactions.  This service is available as a horizontally scalable
 service built using the <a href=https://opencrux.com/main/index.html>Crux</a> unbundled store.
 
-The store setup uses Kafka in two ways, firstly as the transaction log for Crux, secondly for streaming
-query results back to the client.
+The store requires both Kafka and Minio and it is assumed that these will be deployed into Kubernetes.
+Depending on how these components are deployed the service deployment file <code>transaction-association-deployment.yml</code>
+may need to be modified, but see below.
 
-## Installation
+
+## Installing Kafka
 Firstly use helm to install kafka to your local kubernetes cluster.  The best way is to use the helm charts
 provided here <a href=https://github.com/confluentinc/cp-helm-charts#manual-test>Confluent Kafka Helm</a>
 
@@ -45,6 +47,49 @@ my-confluent-cp-zookeeper-1                        2/2     Running   0          
 my-confluent-cp-zookeeper-2                        2/2     Running   0          7s
 </pre>
 
+
+## Installing Minio
+The Transaction/Association can be configured to use a synchronization node for Juxt indicies.  The local
+rocksdb based indices are periodically copied to S3 storage.  This ensures that any new nodes added
+(via auto-scaling) will get a pre-built index.  This ensures that new nodes can become available more
+quickly, but more importantly that the index can store old records instead of relying on the
+kafka transaction-log to store all transactions.
+
+<code>
+helm repo add minio https://helm.min.io/
+</code>
+
+Create a minio namespace to deploy into
+
+<code>
+kubectl create ns minio
+</code>
+
+then deploy minio using helm
+
+<code>
+helm install --namespace minio --generate-name minio/minio
+</code>
+
+Once installed it is important note the name of the node create, something like this
+
+<code>
+minio-1615300183.minio.svc.cluster.local
+</code>
+
+Edit the <code>transaction-service-deployment.yml</code> file and change the name of the <code>S3_ENDPOINT</code>
+
+<code>
+            - name: S3_ENDPOINT
+              value: "http://minio-1614890706.minio.svc.cluster.local:9000"
+</code>
+
+
+
+
+
+
+## Installing The Store
 Next install the store
 
 <code> kubectl create -f k8s/transaction-service-deployment.yml </code>
@@ -76,12 +121,9 @@ Once everything us up and running it should be possible to see the swagger api b
 4. Run your Docker image: `docker run -p 8080:8080 codeenclave/io.codeenclave.fin.examples.service.transactions`
 
 
-## Minio S3 storage
-The Transaction/Association can be configured to use a synchronization node for Juxt indicies.  The local 
-rocksdb based indices are periodically copied to S3 storage.  This ensures that any new nodes added
-(via auto-scaling) will get a pre-built index.  This ensures that new nodes can become available more
-quickly, but more importantly that the index can store old records instead of relying on the 
-kafka transaction-log to store all transactions.
+
+
+
 
 For trying our S3 storage you can use Minio deployed to your local kubernetes.  The easiest way to do
 that is to use the helm charts available at <a href=https://github.com/minio/charts>Minio Kubernetes Helm Charts</a>.

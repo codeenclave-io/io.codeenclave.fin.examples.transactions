@@ -92,7 +92,9 @@ dependencies {
     // https://mvnrepository.com/artifact/io.streamthoughts/kafka-clients-kotlin
     implementation group: 'io.streamthoughts', name: 'kafka-clients-kotlin', version: '0.2.0'
 
-
+    implementation platform('software.amazon.awssdk:bom:2.10.91')
+    implementation 'software.amazon.awssdk:aws-core'
+    implementation 'software.amazon.awssdk:s3'
 
     // Testing
     // testImplementation("io.cucumber:cucumber-java:${cucumberVersion}")
@@ -177,4 +179,11 @@ task cucumber() {
 jar {
     manifest { attributes "Main-Class": "io.codeenclave.fin.examples.service.transactions.MainKt"}
     from { configurations.compile.collect { it.isDirectory() ? it : zipTree(it) } }
+}
+
+compileKotlin {
+    kotlinOptions.jvmTarget = "1.8"
+}
+compileTestKotlin {
+    kotlinOptions.jvmTarget = "1.8"
 }

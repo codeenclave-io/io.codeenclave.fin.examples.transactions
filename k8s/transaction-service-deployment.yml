@@ -13,15 +13,28 @@ spec:
   selector:
     name:  association-transaction-node
 ---
+apiVersion: autoscaling/v1
+kind: HorizontalPodAutoscaler
+metadata:
+  name: association-transaction
+spec:
+  scaleTargetRef:
+    apiVersion: apps/v1
+    kind: Deployment
+    name: association-transaction
+  minReplicas: 1
+  maxReplicas: 10
+  targetCPUUtilizationPercentage: 50
+---
 apiVersion: apps/v1 # for versions before 1.9.0 use apps/v1beta2
 kind: Deployment
 metadata:
-  name: association-transaction-node
+  name: association-transaction
 spec:
   selector:
     matchLabels:
       name: association-transaction-node
-  replicas: 2  # tells deployment to run 2 pods matching the template
+  # replicas: 2  # tells deployment to run 2 pods matching the template
   template:
     metadata:
       labels:
@@ -63,6 +76,27 @@ spec:
               value: "1"
             - name: TRANSACTION_ROCKS_DB_DIRECTORY
               value: "/tmp/rocksdb/$(NODE_NAME)/transaction"
+            - name: ASSOCIATIONSTORE_S3_SYNC_BUCKET
+              value: "associationsync"
+            - name: TRANSACTIONSTORE_S3_SYNC_FREQUENCY
+              value: "10"
+            - name: TRANSACTIONSTORE_S3_SYNC_BUCKET
+              value: "transactionsync"
+            - name: TRANSACTIONSTORE_S3_SYNC_FREQUENCY
+              value: "10"
+            - name: S3_ENDPOINT
+              value: "http://minio-1614890706.minio.svc.cluster.local:9000"
+            - name: S3_ACCESS_KEY
+              valueFrom:
+                secretKeyRef:
+                  name: minio-access-keys
+                  key: S3_ACCESS_KEY
+            - name: S3_SECRET_KEY
+              valueFrom:
+                secretKeyRef:
+                  name: minio-access-keys
+                  key: S3_SECRET_KEY
+
       volumes:
         - name: task-pv-storage
           hostPath:

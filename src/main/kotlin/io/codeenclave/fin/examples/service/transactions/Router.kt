@@ -1,6 +1,8 @@
 package io.codeenclave.fin.examples.service.transactions
 
 import io.codeenclave.fin.examples.service.transactions.handlers.*
+import io.codeenclave.fin.examples.service.transactions.handlers.testS3MinioStorageHandler.getObjectFromS3
+import io.codeenclave.fin.examples.service.transactions.handlers.testS3MinioStorageHandler.storeObjectToS3
 import io.codeenclave.fin.examples.service.transactions.util.CatchHttpExceptions
 import io.codeenclave.fin.examples.service.transactions.util.createErrorResponse
 import org.http4k.core.*
@@ -32,7 +34,9 @@ class Router(
                     "/association" bind Method.GET to generateTransactionAssociationHandler,
                     "/generate" bind Method.GET to RandomTransactionAssociation.generateRandomTransactionAssociations,
                         "/generate/status" bind Method.GET to RandomTransactionAssociation.getStatus,
-                    "/association/counterparty" bind Method.GET to getTransactionsByAssociation
+                    "/association/counterparty" bind Method.GET to getTransactionsByAssociation,
+                        "/s3" bind Method.PUT to storeObjectToS3,
+                "/s3" bind Method.GET to getObjectFromS3
                 )
             )
 }
