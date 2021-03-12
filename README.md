@@ -18,10 +18,16 @@ Add the helm charts to your helm repository
 helm repo add confluentinc https://confluentinc.github.io/cp-helm-charts/
 </code>
 
+Create the namespace
+
+<code>
+kubectl create ns kafka
+</code>
+
 Then deploy kafka
 
 <code>
-helm install my-confluent confluentinc/cp-helm-charts --version 0.6.0 -f k8s/kafka-helm-values.yml
+helm install my-confluent confluentinc/cp-helm-charts --namespace kafka --version 0.6.0 -f k8s/kafka-helm-values.yml
 </code>
 
 The <code>kafka-helm-values.yml</code> file contains configuration to expose the kafka cluster externally
@@ -31,7 +37,7 @@ just 1 kafka broker and 1 zookeeper broker.  This is to limit the resources need
 
 
 <pre>
-kubectl get pods
+kubectl get pods --namespace kafka
 
 NAME                                               READY   STATUS    RESTARTS   AGE
 my-confluent-cp-control-center-85779cf5bb-qcvd7    1/1     Running   0          20s
