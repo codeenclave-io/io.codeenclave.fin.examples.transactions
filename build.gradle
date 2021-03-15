@@ -96,6 +96,9 @@ dependencies {
     implementation 'software.amazon.awssdk:aws-core'
     implementation 'software.amazon.awssdk:s3'
 
+    // temporal package
+    implementation 'io.temporal:temporal-sdk:1.0.0'
+
     // Testing
     // testImplementation("io.cucumber:cucumber-java:${cucumberVersion}")
     testImplementation("io.cucumber:cucumber-java8:${cucumberVersion}")

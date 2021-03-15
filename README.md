@@ -80,20 +80,47 @@ helm install --namespace minio --generate-name minio/minio
 Once installed it is important note the name of the node create, something like this
 
 <code>
-minio-1615300183.minio.svc.cluster.local
+minio-1615696290.minio.svc.cluster.local
 </code>
 
 Edit the <code>transaction-service-deployment.yml</code> file and change the name of the <code>S3_ENDPOINT</code>
 
 <code>
             - name: S3_ENDPOINT
-              value: "http://minio-1614890706.minio.svc.cluster.local:9000"
+              value: "http://minio-1615696290.minio.svc.cluster.local:9000"
 </code>
 
+Next we need to get the access and secret keys for minio, enable access to minio from localhost so that we can
+create two s3 buckets for the transaction server.
 
+<pre>
+ACCESS_KEY=$(kubectl get secret minio-1615696290 -o jsonpath="{.data.accesskey}" --namespace minio| base64 --decode)
+SECRET_KEY=$(kubectl get secret minio-1615696290 -o jsonpath="{.data.secretkey}" --namespace minio| base64 --decode)
+</pre>
 
+then run 
+<pre>
+echo -n $ACCESS_KEY | base64
+V2RRMGFtcUNrUVlZNlliQlFGNnU=
 
+echo -n $SECRET_KEY | base64
+dFp0Q1RFM0tQY0VnWmNMWXk2TlhGdFVPVlRZdUdVSUhmWWdkWW5Nbg==
+</pre>
 
+the two keys need to be copied into the <code>k8s/minio-access-secrets.yml</code> file and then run
+<pre>
+kubectl create -f k8s/minio-access-secrets.yml
+</pre>
+
+now set up access to minio to be accessible from localhost
+<pre>
+export POD_NAME=$(kubectl get pods --namespace minio -l "release=minio-1615696290" -o jsonpath="{.items[0].metadata.name}")
+
+kubectl port-forward $POD_NAME 9000 --namespace minio
+</pre>
+
+in a browser got to <a href=http://localhost:9000>http://localhost:9000 </a>.  Login using the un-encoded access and secret
+and keys.  Create two s3 buckets one called associationsync and the other called transactionsync.
 
 ## Installing The Store
 Next install the store
@@ -111,8 +138,6 @@ you should get something similar to this:
 <pre>
 NAME                                          READY   STATUS    RESTARTS   AGE
 association-transaction-node-765886c7-c48cd   1/1     Running   0          19m
-association-transaction-node-765886c7-jvvt4   1/1     Running   0          19m
-association-transaction-node-765886c7-ppqx4   1/1     Running   0          19m
 </pre>
 
 Once everything us up and running it should be possible to see the swagger api by visiting
@@ -127,29 +152,10 @@ Once everything us up and running it should be possible to see the swagger api b
 4. Run your Docker image: `docker run -p 8080:8080 codeenclave/io.codeenclave.fin.examples.service.transactions`
 
 
+## Note on Kubernetes AutoScaling
+The store deployment uses horizontal scaling, but this only works if the kubernetes cluster has the metrics
+server running.  If you are using a kubernetes cluster from Docker Desktop the metrics server is not installed
+by default.
 
-
-
-
-For trying our S3 storage you can use Minio deployed to your local kubernetes.  The easiest way to do
-that is to use the helm charts available at <a href=https://github.com/minio/charts>Minio Kubernetes Helm Charts</a>.
-
-To access Minio from localhost, run the below commands:
-
-1. export POD_NAME=$(kubectl get pods --namespace minio -l "release=minio-1614327680" -o jsonpath="{.items[0].metadata.name}")
-
-2. kubectl port-forward $POD_NAME 9000 --namespace minio
-
-Read more about port forwarding here: http://kubernetes.io/docs/user-guide/kubectl/kubectl_port-forward/
-
-You can now access Minio server on http://localhost:9000. Follow the below steps to connect to Minio server with mc client:
-
-1. Download the Minio mc client - https://docs.minio.io/docs/minio-client-quickstart-guide
-
-2. Get the ACCESS_KEY=$(kubectl get secret minio-1614327680 -o jsonpath="{.data.accesskey}" | base64 --decode) and the SECRET_KEY=$(kubectl get secret minio-1614327680 -o jsonpath="{.data.secretkey}" | base64 --decode)
-
-3. mc alias set minio-1614327680-local http://localhost:9000 "$ACCESS_KEY" "$SECRET_KEY" --api s3v4
-
-4. mc ls minio-1614327680-local
-
-Alternately, you can use your browser or the Minio SDK to access the server - https://docs.minio.io/categories/17
+You will therefore need to install it.  To do that follow the instructions over here
+<a href=https://blog.codewithdan.com/enabling-metrics-server-for-kubernetes-on-docker-desktop/>https://blog.codewithdan.com/enabling-metrics-server-for-kubernetes-on-docker-desktop/ </a>
